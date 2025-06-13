@@ -1,0 +1,55 @@
+<!-- templates/chart.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Real-Time Chart</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <canvas id="sensorChart" width="800" height="400"></canvas>
+
+    <script>
+        const ws = new WebSocket('ws://localhost:8080/ws/sensor/');
+        const labels = [];
+        const tempData = [];
+        const humidData = [];
+
+        const ctx = document.getElementById('sensorChart').getContext('2d');
+        const chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Temperature (°C)',
+                        borderColor: 'red',
+                        data: tempData
+                    },
+                    {
+                        label: 'Humidity (%)',
+                        borderColor: 'blue',
+                        data: humidData
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                animation: false,
+                scales: {
+                    x: { display: true },
+                    y: { display: true }
+                }
+            }
+        });
+
+        ws.onmessage = function(event) {
+            console.log("Received data:", event.data);
+            const data = JSON.parse(event.data);
+            labels.push(new Date(data.timestamp).toLocaleTimeString());
+            tempData.push(data.temperature);
+            humidData.push(data.humidity);
+            chart.update();
+        }
+    </script>
+</body>
+</html>
